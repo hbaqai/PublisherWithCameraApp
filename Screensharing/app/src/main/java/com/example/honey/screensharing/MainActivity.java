@@ -6,9 +6,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -24,7 +22,6 @@ import com.opentok.android.Subscriber;
 import com.opentok.android.SubscriberKit;
 
 import java.util.List;
-import static com.opentok.client.DeviceInfo.getApplicationContext;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.AppSettingsDialog;
@@ -58,69 +55,58 @@ public class MainActivity extends AppCompatActivity
         swapCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((ScreensharingCapturer)(mPublisher.getCapturer())).cycleCamera();
+                ((FlexibleCameraCapturer)(mPublisher.getCapturer())).cycleCamera();
             }
         });
-
-        /*
-        //Screensharing webview code
-        mWebViewContainer = (WebView)findViewById(R.id.webView);
-        mWebViewContainer.setWebViewClient(new WebViewClient());
-        WebSettings webSettings = mWebViewContainer.getSettings();
-        webSettings.setJavaScriptEnabled(true);
-        mWebViewContainer.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-        mWebViewContainer.loadUrl("http://www.tokbox.com");
-        */
 
         mPublisherViewContainer = (RelativeLayout) findViewById(R.id.publisherview);
         mSubscriberViewContainer = (LinearLayout) findViewById(R.id.subscriberview);
 
         this.getApplicationContext();
 
-
-
-
         requestPermissions();
     }
 
     @Override
     protected void onStart() {
-        Log.d(TAG, "onStart");
-
-        if(IS_CAMERA_APP_OPEN) {
-            IS_CAMERA_APP_OPEN = false;
-            ((ScreensharingCapturer) (mPublisher.getCapturer())).init();
-            ((ScreensharingCapturer)(mPublisher.getCapturer())).swapCamera(((ScreensharingCapturer)(mPublisher.getCapturer())).getCameraIndex());
-        }
-
         super.onStart();
+        Log.d(TAG, "onStart");
     }
 
     @Override
     protected void onRestart() {
-        Log.d(TAG, "onRestart");
-
         super.onRestart();
+        Log.d(TAG, "onRestart");
     }
 
     @Override
     protected void onResume() {
-        Log.d(TAG, "onResume");
-
         super.onResume();
+        Log.d(TAG, "onResume");
 
         if (mSession == null) {
             return;
         }
         mSession.onResume();
+
+        //re-obtain the camera for the Publisher after returning to the activity
+        if(IS_CAMERA_APP_OPEN) {
+            IS_CAMERA_APP_OPEN = false;
+            ((FlexibleCameraCapturer) (mPublisher.getCapturer())).init();
+            ((FlexibleCameraCapturer)(mPublisher.getCapturer())).swapCamera(((FlexibleCameraCapturer)(mPublisher.getCapturer())).getCameraIndex());
+        }
     }
 
     @Override
     protected void onPause() {
+        super.onPause();
         Log.d(TAG, "onPause");
 
-        super.onPause();
+        // relinquish the camera without destroying the publisher
+        ((FlexibleCameraCapturer)(mPublisher.getCapturer())).releaseCamera();
+        IS_CAMERA_APP_OPEN = true;
 
+        // call Session.onPause()
         if (mSession == null) {
             return;
         }
@@ -133,11 +119,8 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onStop() {
-        Log.d(TAG, "onStop");
-
-        ((ScreensharingCapturer)(mPublisher.getCapturer())).releaseCamera();
-        IS_CAMERA_APP_OPEN = true;
         super.onStop();
+        Log.d(TAG, "onStop");
     }
 
     @Override
@@ -191,10 +174,9 @@ public class MainActivity extends AppCompatActivity
     public void onConnected(Session session) {
         Log.d(TAG, "onConnected: Connected to session " + session.getSessionId());
 
-       //mPublisher = new Publisher(MainActivity.this, "publisher");
-        mPublisher = new Publisher(MainActivity.this, "publisher", new ScreensharingCapturer(MainActivity.this));
-
-       // mPublisher.cycleCamera();
+        // use the custom capturer instead of the default one
+        // mPublisher = new Publisher(MainActivity.this, "publisher");
+        mPublisher = new Publisher(MainActivity.this, "publisher", new FlexibleCameraCapturer(MainActivity.this));
 
         mPublisher.setPublisherListener(this);
         mPublisher.setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
@@ -207,7 +189,6 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onDisconnected(Session session) {
         Log.d(TAG, "onDisconnected: disconnected from session " + session.getSessionId());
-
         mSession = null;
     }
 

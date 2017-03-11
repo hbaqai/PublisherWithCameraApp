@@ -21,7 +21,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import com.opentok.android.BaseVideoCapturer;
 
-public class ScreensharingCapturer extends BaseVideoCapturer implements PreviewCallback, BaseVideoCapturer.CaptureSwitch {
+public class FlexibleCameraCapturer extends BaseVideoCapturer implements PreviewCallback, BaseVideoCapturer.CaptureSwitch {
 
     private final static String LOGTAG = "customer-video-capturer";
 
@@ -52,7 +52,7 @@ public class ScreensharingCapturer extends BaseVideoCapturer implements PreviewC
     private Display mCurrentDisplay;
     private SurfaceTexture mSurfaceTexture;
 
-    public ScreensharingCapturer(Context context) {
+    public FlexibleCameraCapturer(Context context) {
 
         // Initialize front camera by default
         this.mCameraIndex = getFrontCameraIndex();
@@ -197,12 +197,12 @@ public class ScreensharingCapturer extends BaseVideoCapturer implements PreviewC
     @Override
     public void cycleCamera() {
         this.swapCamera((this.getCameraIndex() + 1) % Camera.getNumberOfCameras());
-        //System.out.println("cycle camera called");
+        Log.d(LOGTAG, "cycle camera called");
     }
 
     /*
-         * Returns the currently active camera ID.
-         */
+     * Returns the currently active camera ID.
+     */
     public int getCameraIndex() {
         return mCameraIndex;
     }
@@ -347,8 +347,7 @@ public class ScreensharingCapturer extends BaseVideoCapturer implements PreviewC
         mPreviewBufferLock.unlock();
     }
 
-    public void releaseCamera()
-    {
+    public void releaseCamera() {
         if(mCamera != null)
             mCamera.release();
     }
