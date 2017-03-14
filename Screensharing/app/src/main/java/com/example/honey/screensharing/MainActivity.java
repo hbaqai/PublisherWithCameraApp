@@ -90,10 +90,15 @@ public class MainActivity extends AppCompatActivity
         mSession.onResume();
 
         //re-obtain the camera for the Publisher after returning to the activity
-        if(IS_CAMERA_APP_OPEN) {
+//        if(IS_CAMERA_APP_OPEN) {
+//            IS_CAMERA_APP_OPEN = false;
+//            ((FlexibleCameraCapturer) (mPublisher.getCapturer())).init();
+//            ((FlexibleCameraCapturer)(mPublisher.getCapturer())).swapCamera(((FlexibleCameraCapturer)(mPublisher.getCapturer())).getCameraIndex());
+//        }
+        if(IS_CAMERA_APP_OPEN){
             IS_CAMERA_APP_OPEN = false;
             ((FlexibleCameraCapturer) (mPublisher.getCapturer())).init();
-            ((FlexibleCameraCapturer)(mPublisher.getCapturer())).swapCamera(((FlexibleCameraCapturer)(mPublisher.getCapturer())).getCameraIndex());
+            ((FlexibleCameraCapturer)(mPublisher.getCapturer())).startCapture();
         }
     }
 
@@ -103,7 +108,8 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "onPause");
 
         // relinquish the camera without destroying the publisher
-        ((FlexibleCameraCapturer)(mPublisher.getCapturer())).releaseCamera();
+        // ((FlexibleCameraCapturer)(mPublisher.getCapturer())).releaseCamera();
+        ((FlexibleCameraCapturer)(mPublisher.getCapturer())).destroy();
         IS_CAMERA_APP_OPEN = true;
 
         // call Session.onPause()
