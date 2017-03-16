@@ -96,13 +96,12 @@ public class FlexibleCameraCapturer extends BaseVideoCapturer implements Preview
             mCamera.addCallbackBuffer(buffer);
         }
 
+        mSurfaceTexture = new SurfaceTexture(42);
         try {
-            mSurfaceTexture = new SurfaceTexture(42);
             mCamera.setPreviewTexture(mSurfaceTexture);
-
         } catch (Exception e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            throw new RuntimeException("RuntimeException thrown if camera wasn't aquired", e);
+            //e.printStackTrace();
         }
 
         // Start preview
@@ -324,7 +323,6 @@ public class FlexibleCameraCapturer extends BaseVideoCapturer implements Preview
         mCamera = Camera.open(mCameraIndex);
         mCurrentDeviceInfo = new Camera.CameraInfo();
         Camera.getCameraInfo(mCameraIndex, mCurrentDeviceInfo);
-
     }
 
     @Override

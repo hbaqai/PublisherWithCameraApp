@@ -2,6 +2,7 @@ package com.example.honey.screensharing;
 
 import android.Manifest;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -46,6 +47,10 @@ public class MainActivity extends AppCompatActivity
     private RelativeLayout mPublisherViewContainer;
     private LinearLayout mSubscriberViewContainer;
 
+    private Handler handler;
+    int timeInMilliseconds = 100;
+    int cameraRetries = 0;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,6 +66,8 @@ public class MainActivity extends AppCompatActivity
 
         mPublisherViewContainer = (RelativeLayout) findViewById(R.id.publisherview);
         mSubscriberViewContainer = (LinearLayout) findViewById(R.id.subscriberview);
+
+        handler = new Handler();
 
         this.getApplicationContext();
 
@@ -95,12 +102,31 @@ public class MainActivity extends AppCompatActivity
 //            ((FlexibleCameraCapturer) (mPublisher.getCapturer())).init();
 //            ((FlexibleCameraCapturer)(mPublisher.getCapturer())).swapCamera(((FlexibleCameraCapturer)(mPublisher.getCapturer())).getCameraIndex());
 //        }
+
         if(IS_CAMERA_APP_OPEN){
             IS_CAMERA_APP_OPEN = false;
-            ((FlexibleCameraCapturer) (mPublisher.getCapturer())).init();
-            ((FlexibleCameraCapturer)(mPublisher.getCapturer())).startCapture();
+            runnable.run();
         }
     }
+
+    Runnable runnable = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                cameraRetries++;
+                ((FlexibleCameraCapturer) (mPublisher.getCapturer())).init();
+                ((FlexibleCameraCapturer) (mPublisher.getCapturer())).startCapture();
+            } catch (Exception e) {
+                if(timeInMilliseconds < 1000){
+                    handler.postDelayed(runnable, timeInMilliseconds);
+                    timeInMilliseconds = timeInMilliseconds * 2;
+                }
+                else{
+                    Log.e(TAG, "error re-obtaining camera");
+                }
+            }
+        }
+    };
 
     @Override
     protected void onPause() {
